@@ -1,0 +1,110 @@
+"""
+The MIT License
+
+Copyright (c) 2018-2020 Mark Douthwaite
+"""
+
+from typing import Optional, List, Any
+
+import fire
+import joblib
+import numpy as np
+import pandas as pd
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, roc_auc_score
+
+
+np.random.seed(42)
+
+LABEL: str = "target"
+
+NUMERIC_FEATURES: List[str] = [
+    "age",
+    "trestbps",
+    "chol",
+    "fbs",
+    "thalach",
+    "exang",
+    "oldpeak",
+]
+
+CATEGORICAL_FEATURES: List[str] = ["sex", "cp", "restecg", "ca", "slope", "thal"]
+
+
+def create_pipeline(
+    categorical_features: List[str], numeric_features: List[str]
+) -> Pipeline:
+
+    numeric_transformer = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler()),
+        ]
+    )
+
+    categorical_transformer = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="constant")),
+            ("onehot", OneHotEncoder(handle_unknown="ignore")),
+        ]
+    )
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", numeric_transformer, numeric_features),
+            ("cat", categorical_transformer, categorical_features),
+        ]
+    )
+
+    return Pipeline(
+        steps=[("preprocessor", preprocessor), ("classifier", LogisticRegression())]
+    )
+
+
+def train(
+    path: str,
+    test_size: float = 0.2,
+    dump: bool = True,
+    tag: str = "",
+    categorical_features: Optional[List[str]] = None,
+    numeric_features: Optional[List[str]] = None,
+    label: Optional[str] = None,
+    **kwargs: Optional[Any],
+) -> None:
+
+    if categorical_features is None:
+        categorical_features = CATEGORICAL_FEATURES
+
+    if numeric_features is None:
+        numeric_features = NUMERIC_FEATURES
+
+    if label is None:
+        label = LABEL
+
+    df = pd.read_csv(path, **kwargs)
+
+    features = df[[*categorical_features, *numeric_features]]
+    target = df[label]
+
+    tx, vx, ty, vy = train_test_split(features, target, test_size=test_size)
+
+    model = create_pipeline(
+        categorical_features=categorical_features, numeric_features=numeric_features
+    )
+    model.fit(tx, ty)
+
+    print(f"Training accuracy: {accuracy_score(model.predict(tx), ty)*100:.2f}%")
+    print(f"Validation accuracy: {accuracy_score(model.predict(vx), vy)*100:.2f}%")
+    print(f"ROC AUC score: {roc_auc_score(vy, model.predict_proba(vx)[:, -1]):.2f}")
+
+    if dump:
+        joblib.dump(model, f"artifacts/pipeline{tag}.joblib")
+
+
+if __name__ == "__main__":
+    fire.Fire(train)

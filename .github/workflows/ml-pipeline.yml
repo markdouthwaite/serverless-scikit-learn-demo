@@ -25,6 +25,7 @@ jobs:
     - name: Test gcloud setup
       run: |
         gsutil ls -a -p ${{ secrets.GCP_PROJECT_ID }}
+        
 
     # load training data
     - name: Run training task

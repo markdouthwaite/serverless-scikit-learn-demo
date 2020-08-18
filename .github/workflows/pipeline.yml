@@ -1,0 +1,49 @@
+name: Train and Deploy
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron:  '0 8 * * MON-FRI'
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup GCP client
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        version: '290.0.1'
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Download the latest dataset.
+      run: |
+        gsutil cp gs://pipeline-example/heart-disease/dataset.csv datasets/default.csv
+
+    - name: Run training task
+      run: |
+        python steps/train.py --path=datasets/defaults.csv
+
+    - name: Upload new model and associated metrics.
+      run: |
+        gsutil cp artifacts/pipeline.pkl gs://pipeline-example/heart-disease/models/latest.pkl
+        gsutil cp artifacts/pipeline.pkl gs://pipeline-example/heart-disease/models/${{ env.GITHUB_RUN_ID }}.pkl
+        gsutil cp artifacts/metrics.json gs://pipeline-example/heart-disease/models/metrics/${{ env.GITHUB_RUN_ID }}.pkl
+
+    - name: Deploy model as Cloud Function
+      runs: gcloud functions deploy heart-disease --entry-point=predict_handler --runtime=python37 --allow-unauthenticated --project=${{ secrets.GCP_PROJECT_ID }} --trigger-http

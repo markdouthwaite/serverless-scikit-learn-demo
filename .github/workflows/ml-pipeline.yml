@@ -1,6 +1,9 @@
 name: Train
 
 on:
+  push:
+    branches:
+      - master
   schedule:
     - cron:  '0 8 * * MON-FRI'
 
@@ -21,7 +24,7 @@ jobs:
     
     - name: Test gcloud setup
       run: |
-        gsutil ls -a -p ${GCP_PROJECT_ID}
+        gsutil ls -a -p ${{ GCP_PROJECT_ID }}
 
     # load training data
     - name: Run training task

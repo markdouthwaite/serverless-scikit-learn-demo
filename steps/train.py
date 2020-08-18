@@ -126,7 +126,7 @@ def train(
 
     if dump:
         joblib.dump(model, f"artifacts/pipeline{tag}.joblib")
-        json.dump(metrics, open(f"artifacts/{tag}{uuid.uuid4().hex}.json", "w"))
+        json.dump(metrics, open(f"artifacts/metrics{tag}.json", "w"))
 
 
 if __name__ == "__main__":

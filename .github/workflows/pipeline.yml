@@ -46,4 +46,5 @@ jobs:
         gsutil cp artifacts/metrics.json gs://pipeline-example/heart-disease/models/metrics/${{ env.GITHUB_RUN_ID }}.pkl
 
     - name: Deploy model as Cloud Function
-      runs: gcloud functions deploy heart-disease --entry-point=predict_handler --runtime=python37 --allow-unauthenticated --project=${{ secrets.GCP_PROJECT_ID }} --trigger-http
+      run: | 
+        gcloud functions deploy heart-disease --entry-point=predict_handler --runtime=python37 --allow-unauthenticated --project=${{ secrets.GCP_PROJECT_ID }} --trigger-http

@@ -35,13 +35,9 @@ jobs:
       run: |
         gsutil cp gs://pipeline-example/heart-disease/dataset.csv datasets/default.csv
 
-    - name: Check directory
-      run: |
-        ls -als
-
     - name: Run training task
       run: |
-        python steps/train.py --path=datasets/defaults.csv
+        python steps/train.py --path=datasets/default.csv
 
     - name: Upload new model and associated metrics.
       run: |

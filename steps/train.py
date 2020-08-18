@@ -4,6 +4,10 @@ The MIT License
 Copyright (c) 2018-2020 Mark Douthwaite
 """
 
+import time
+import json
+import uuid
+from datetime import datetime
 from typing import Optional, List, Any
 
 import fire
@@ -20,6 +24,8 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 
 
 np.random.seed(42)
+
+TIMESTAMP_FMT = "%m-%d-%Y, %H:%M:%S"
 
 LABEL: str = "target"
 
@@ -70,12 +76,13 @@ def train(
     path: str,
     test_size: float = 0.2,
     dump: bool = True,
-    tag: str = "",
     categorical_features: Optional[List[str]] = None,
     numeric_features: Optional[List[str]] = None,
     label: Optional[str] = None,
     **kwargs: Optional[Any],
 ) -> None:
+
+    start = time.time()
 
     if categorical_features is None:
         categorical_features = CATEGORICAL_FEATURES
@@ -98,12 +105,27 @@ def train(
     )
     model.fit(tx, ty)
 
-    print(f"Training accuracy: {accuracy_score(model.predict(tx), ty)*100:.2f}%")
-    print(f"Validation accuracy: {accuracy_score(model.predict(vx), vy)*100:.2f}%")
-    print(f"ROC AUC score: {roc_auc_score(vy, model.predict_proba(vx)[:, -1]):.2f}")
+    end = time.time()
+
+    acc = accuracy_score(model.predict(tx), ty)*100
+    val_acc = accuracy_score(model.predict(vx), vy)*100
+    roc_auc = roc_auc_score(vy, model.predict_proba(vx)[:, -1])
+
+    print(f"Training accuracy: {acc:.2f}%")
+    print(f"Validation accuracy: {val_acc:.2f}%")
+    print(f"ROC AUC score: {roc_auc:.2f}")
+
+    metrics = dict(
+        elapsed = end - start,
+        acc = acc,
+        val_acc = val_acc,
+        roc_auc = roc_auc,
+        timestamp = datetime.now().strftime(TIMESTAMP_FMT)
+    )
 
     if dump:
-        joblib.dump(model, f"artifacts/pipeline{tag}.joblib")
+        joblib.dump(model, "artifacts/pipeline.joblib")
+        json.dump(metrics, open(f"artifacts/{uuid.uuid4().hex}.json", "w"))
 
 
 if __name__ == "__main__":

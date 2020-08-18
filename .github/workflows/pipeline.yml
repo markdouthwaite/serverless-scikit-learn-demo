@@ -47,4 +47,4 @@ jobs:
 
     - name: Deploy model as Cloud Function
       run: | 
-        gcloud functions deploy heart-disease --entry-point=predict_handler --runtime=python37 --allow-unauthenticated --project=${{ secrets.GCP_PROJECT_ID }} --trigger-http
+        gcloud functions deploy heart-disease --entry-point=predict_handler --runtime=python37 --allow-unauthenticated --trigger-http

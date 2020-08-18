@@ -44,6 +44,10 @@ jobs:
         gsutil cp artifacts/pipeline.joblib gs://pipeline-example/heart-disease/models/latest.joblib
         gsutil cp artifacts/pipeline.joblib gs://pipeline-example/heart-disease/models/${{ env.GITHUB_RUN_ID }}.joblib
         gsutil cp artifacts/metrics.json gs://pipeline-example/heart-disease/models/metrics/${{ env.GITHUB_RUN_ID }}.joblib
+    
+    - name: Check auth
+      run: |
+        gcloud config list account --format "value(core.account)"
 
     - name: Deploy model as Cloud Function
       run: | 

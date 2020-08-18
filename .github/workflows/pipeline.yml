@@ -31,7 +31,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: Download the latest dataset.
+    - name: Download the latest dataset
       run: |
         gsutil cp gs://pipeline-example/heart-disease/dataset.csv datasets/default.csv
 
@@ -39,11 +39,11 @@ jobs:
       run: |
         python steps/train.py --path=datasets/default.csv
 
-    - name: Upload new model and associated metrics.
+    - name: Upload new model and associated metrics
       run: |
-        gsutil cp artifacts/pipeline.pkl gs://pipeline-example/heart-disease/models/latest.pkl
-        gsutil cp artifacts/pipeline.pkl gs://pipeline-example/heart-disease/models/${{ env.GITHUB_RUN_ID }}.pkl
-        gsutil cp artifacts/metrics.json gs://pipeline-example/heart-disease/models/metrics/${{ env.GITHUB_RUN_ID }}.pkl
+        gsutil cp artifacts/pipeline.joblib gs://pipeline-example/heart-disease/models/latest.joblib
+        gsutil cp artifacts/pipeline.joblib gs://pipeline-example/heart-disease/models/${{ env.GITHUB_RUN_ID }}.joblib
+        gsutil cp artifacts/metrics.json gs://pipeline-example/heart-disease/models/metrics/${{ env.GITHUB_RUN_ID }}.joblib
 
     - name: Deploy model as Cloud Function
       run: | 

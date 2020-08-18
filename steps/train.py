@@ -75,6 +75,7 @@ def create_pipeline(
 def train(
     path: str,
     test_size: float = 0.2,
+    tag: str = "",
     dump: bool = True,
     categorical_features: Optional[List[str]] = None,
     numeric_features: Optional[List[str]] = None,
@@ -124,8 +125,8 @@ def train(
     )
 
     if dump:
-        joblib.dump(model, "artifacts/pipeline.joblib")
-        json.dump(metrics, open(f"artifacts/{uuid.uuid4().hex}.json", "w"))
+        joblib.dump(model, f"artifacts/pipeline{tag}.joblib")
+        json.dump(metrics, open(f"artifacts/{tag}{uuid.uuid4().hex}.json", "w"))
 
 
 if __name__ == "__main__":
